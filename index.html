@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoSmart Campus - Digital Twin Dashboard</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+            margin: 0;
+            padding: 30px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #334155;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            border: 1px solid #334155;
+        }
+
+        .metric {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #38bdf8;
+            margin: 10px 0;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            background: #22c55e;
+            color: white;
+            margin-top: 10px;
+        }
+
+        .ai-card {
+            border-color: #38bdf8;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            grid-column: span 1;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>🌱 EcoSmart Campus Digital Twin</h1>
+        <div id="timestamp" style="color: #94a3b8; font-weight: 500;">Syncing timestamp...</div>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <h3>Classroom 101 Occupancy</h3>
+            <div class="metric" id="occupancy">--</div>
+            <p>Capacity: 60 Students</p>
+            <p>Last CV Update: <span id="last-updated" style="color: #38bdf8;">--</span></p>
+        </div>
+
+        <div class="card">
+            <h3>Energy Consumption</h3>
+            <div class="metric" id="energy">-- kW</div>
+            <span class="status-badge" id="ac-status">HVAC: Active</span>
+        </div>
+
+        <div class="card">
+            <h3>AI Lab 3 Water & Waste</h3>
+            <p style="font-size: 1.1rem; margin-top: 15px;">Water Flow: <span id="water"
+                    style="font-weight: bold; color: #38bdf8;">--</span> LPM</p>
+            <p style="font-size: 1.1rem;">Smart Bin Fill Level: <span id="bin"
+                    style="font-weight: bold; color: #38bdf8;">--</span>%</p>
+            <span class="status-badge" style="background: #3b82f6;">IoT Network Normal</span>
+        </div>
+
+        <div class="card ai-card">
+            <h3>🤖 GenAI Predictive Analytics</h3>
+            <p id="ai-insight" style="font-style: italic; color: #38bdf8; margin-top: 15px; line-height: 1.5;">Analyzing
+                campus activity patterns...</p>
+            <p style="margin-top: 20px;"><b>Trend Forecast:</b> <span id="ai-trend" style="color: #cbd5e1;">--</span>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        async function fetchCampusData() {
+            try {
+                const response = await fetch('/api/status');
+                const result = await response.json();
+
+                document.getElementById('timestamp').innerText = `System Time: ${result.timestamp}`;
+
+                const room = result.data.classroom_101;
+                document.getElementById('occupancy').innerText = room.current_occupancy;
+                document.getElementById('energy').innerText = `${room.energy_consumption_kw} kW`;
+                document.getElementById('last-updated').innerText = room.last_updated || 'Waiting...';
+
+                const lab = result.data.lab_3;
+                document.getElementById('water').innerText = lab.water_flow_lpm;
+                document.getElementById('bin').innerText = lab.bin_fill_level_pct;
+            } catch (error) {
+                console.error("Error fetching campus state:", error);
+            }
+        }
+
+        async function fetchAIPredictions() {
+            try {
+                const response = await fetch('/api/predict');
+                const result = await response.json();
+                document.getElementById('ai-insight').innerText = `"${result.ai_insights}"`;
+                document.getElementById('ai-trend').innerText = result.trend;
+            } catch (error) {
+                console.error("Error fetching AI predictions:", error);
+            }
+        }
+
+        // Poll endpoints every 2 seconds for real-time responsiveness
+        setInterval(fetchCampusData, 2000);
+        setInterval(fetchAIPredictions, 5000);
+
+        fetchCampusData();
+        fetchAIPredictions();
+    </script>
+</body>
+
+</html>
